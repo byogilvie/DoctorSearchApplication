@@ -95,7 +95,7 @@ function logOut()
 		$('#searchDocs').click(function(){
 			var fName = $('#fName').val();
 			var lName = $('#lName').val();
-			
+			//here's the part that makes the request
 			var request = new XMLHttpRequest();
 		    var url = "https://npiregistry.cms.hhs.gov/api/?first_name="+fName+"&last_name="+lName;
 		    request.onreadystatechange = function() {
