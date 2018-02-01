@@ -91,6 +91,7 @@
 		</form>
 		<div class='row' id='myTable'></div>
 		<div id='myPagan'></div>
+		<p>Data from <a href='https://betterdoctor.com'>BetterDoctor</a></p>
 	</div>
 	<script>
 		function validateLogin(myForm) {
