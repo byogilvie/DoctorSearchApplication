@@ -1,5 +1,3 @@
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-	pageEncoding="ISO-8859-1"%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -40,9 +38,27 @@
 			</div>
 		</div>
 	</div>
+	<div class="modal fade" id="helpModal">
+		<div class='modal-content'>
+			<div class='modal-body'>
+				<ul>
+					<li>Name: what is the name of the doctor you're searching for?</li>
+					<li>Location: what is the city, state, and/or zip code you want to search in?</li>
+					<li>Range: how wide a search radius (in miles) do you want to search in?</li>
+					<li>Gender: what gender would you like your doctor to be?</li>
+					<li>Per page: how many results would like to see per page?</li>
+					<li>Sort by: what order do you want to see the results?</li>
+					<li>Accenting new patients: do you want to only see currently available doctors?</li>
+					<li>Language: do you want to see a doctor that speaks a certain language?</li>
+					<li>Services: what kind of doctor are you looking for?</li>
+				</ul>
+			</div>
+		</div>
+	</div>
 	<div class='container'>
 		<div class='row'>
 			<button type='button' class='btn' onClick='logOut()'>Log Out</button>
+			<button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#helpModal">Help</button>
 		</div>
 		<form class='well' id='searchForm'>
 			<div class="form-group row">
@@ -198,6 +214,10 @@
 		        	  locationTxt = lat + ','+lng;
 		        	  nextSteps();
 		            }
+		          else
+		       		{
+		        	  alert('Geocode failed due to the following reason:' + status);
+		       		}
 			});
 			
 		});
@@ -221,9 +241,15 @@
 			var query = $('#query').val();
 			if(query != '') url += 'query='+query+'&';
 			url += 'limit=100&user_key=' + apiKey;
-			$.get(url, function(data){
-				nextProcess(data.data);
-				
+			$.ajax({
+				url: url,
+				type: 'GET',
+				success: function(data)
+				{nextProcess(data.data);},
+				error: function(data)
+					{
+						alert(meta.message)
+					}
 				});
 		}
 		function loopThrough(array, target)
