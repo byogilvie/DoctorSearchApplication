@@ -9,20 +9,8 @@
 <script type="text/javascript" src="dist/js/bootstrap.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnA5Xj0yd3O1xJKlwluq8BYmuQnKuVCFY&libraries=places">
 <script type="text/javascript">
-	$(window).on('load', function() {
-		if(localStorage.getItem('clickedList') == null)
-		{
-			let clickedList = [];
-			localStorage.setItem('clickedList', JSON.stringify(clickedList));
-		}
-		//if not logged in already, show modal
-		if (localStorage.getItem('activeUser'))
-			return;
-		else {
-			$('#loginModal').modal('show');
-		}
-	});
 </script>
+<script src = "DSAjs.js"></script>
 </head>
 <body>
 	<div class="modal fade" id="loginModal" data-backdrop="static">
@@ -66,8 +54,21 @@
 					<label for="name">Name</label> <input type="text"
 						class="form-control" id="name">
 				</div>
+				<div class='col-md-4 col-sm-4'>
+					<label for="lat">latitude</label> <input type="text"
+						class="form-control" id="lat">
+				</div>
+				<div class='col-md-4 col-sm-4'>
+					<label for="lng">longitude</label> <input type="text"
+						class="form-control" id="lng">
+				</div>
+				<div class='col-md-2 col-sm-4'>
+					<label for="range">Search range</label> <input type="number"
+						class="form-control" id="range" step='5' min='5' max='25'
+						value='5'>
+				</div>
 			</div>
-			<div class="form-group row">
+			<!--  <div class="form-group row">
 				<div class='col-md-2 col-sm-4'>
 					<label for="city">City</label> <input type="text"
 						class="form-control" id="city">
@@ -80,12 +81,8 @@
 					<label for="zip">Postal Code</label> <input type="number"
 						class="form-control" id="zip" maxlength="5">
 				</div>
-				<div class='col-md-2 col-sm-4'>
-					<label for="range">Search range</label> <input type="number"
-						class="form-control" id="range" step='5' min='5' max='25'
-						value='5'>
-				</div>
-			</div>
+				
+			</div>-->
 			<div class="form-group row">
 				<div class='col-md-2 col-sm-4'>
 					<label for="gender">Gender</label> <select id="gender">
@@ -100,7 +97,7 @@
 						value='10'>
 				</div>
 				<div class='col-md-2 col-sm-4'>
-					<label for="sortEl">Sort by:</label> <select id="sortEl">
+					<label for="sort">Sort by:</label> <select id="sort">
 						<option value=""></option>
 						<option value='full-name-asc'>Name</option>
 						<option value='distance-asc'>Distance</option>
@@ -168,38 +165,42 @@
 		</p>
 	</div>
 	<script>
+	$(document).ready(function() {
+		if (navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(showPosition);
+		} else {
+			alert("Geolocation is not supported by this browser.");
+		}
+		function showPosition(position) {
+			$('#lat').val(position.coords.latitude);
+			$('#lng').val(position.coords.longitude);
+		}
+	
+		//if not logged in already, show modal
+		if (localStorage.getItem('activeUser'))
+			return;
+		else {
+			$('#loginModal').modal('show');
+			return;
+		}
+	});
 		function logOut() {
 			localStorage.removeItem("activeUser");
 			//console.log(localStorage.getItem('activeUser'));
 			$('#loginModal').modal('show');
 		}
-		$('#loginForm').click(function(){
-			//console.log($('#fName').val() + " " + $('#lName').val());
-			localStorage.setItem('activeUser', $('#fName').val() + " "
-					+ $('#lName').val());
-			$('#loginModal').modal('hide');
-		});
-		
+		$('#loginForm').click(
+				function() {
+					//console.log($('#fName').val() + " " + $('#lName').val());
+					localStorage.setItem('activeUser', $('#fName').val() + " "
+							+ $('#lName').val());
+					$('#loginModal').modal('hide');
+				});
+
+		var location;
 		var resultcount, searchResults, locationTxt = '', sortEl;
 		var apiKey = '5c53490fbdd176694ccc59ea747d1dae';
-		//creates the table
-		/**$('#topClicked').click(function(){
-			let clickedList = JSON.parse(localStorage.getItem('clickedList'));
-			let topDocs = [];
-			for(var i = 0; i < 10; i++)
-			{
-				jQuery.ajax({
-			        url: 'https://api.betterdoctor.com/2016-03-01/doctors/'+ clickedList[i] + '?user_key=' + apiKey,
-			        success: function (result) {
-			            topDocs.push[result.data];
-			        },
-			        async: false
-			    });
-			}
-			searchResults = topDocs;
-			resultcount = 10;
-			makeTable(1);
-		});*/
+		/**
 		$('#searchDocs').click(function(){
 			//gets the address
 			var geocoder = new google.maps.Geocoder();
@@ -220,270 +221,29 @@
 		       		}
 			});
 			
-		});
-		
+		});*/
 		//this is needed because the geocoder is an asynchronous call
-		function nextSteps()
-		{
+		$('#searchDocs').click(function() {
+			var x = document.getElementById("searchForm").elements;
+			var fv = new formValues(x);
 			var url = 'https://api.betterdoctor.com/2016-03-01/doctors?';
 			var npiurl = 'https://npiregistry.cms.hhs.gov/api/?';
-			sortEl = $('#sortEl').val();
-			//gets the name
-			url += 'name=' + encodeURI($('#name').val()) + '&';
-			url += 'location='+encodeURIComponent(locationTxt+','+$('#range').val()) + '&';
-			url += 'user_location='+encodeURIComponent(locationTxt) + '&';
-			if(sortEl != "" && sortEl != 'clicks')
-			{
-				url += 'sort=' + sortEl + '&';
+			var keys = Object.keys(fv.urlEls);
+			for (var i = 0; i < keys.length; i++) {
+				url += keys[i] + '=' + fv.urlEls[keys[i]] + '&';
 			}
-			var gender = $('#gender').val();
-			if(gender != '') url += 'gender='+gender+'&';
-			var query = $('#query').val();
-			if(query != '') url += 'query='+query+'&';
 			url += 'limit=100&user_key=' + apiKey;
 			$.ajax({
-				url: url,
-				type: 'GET',
-				success: function(data)
-				{nextProcess(data.data);},
-				error: function(data)
-					{
-						alert(meta.message)
-					}
-				});
-		}
-		function loopThrough(array, target)
-		{
-			var text = '<ul><li>';
-			for(var i = 0; i < array.length; i++)
-			{
-				text += array[i][target] +'</li>';
-				if(i != array.length-1)
-				{
-					text += '<li>';
-					continue;
-				}
-			}
-			text += '</ul>';
-			return text;
-		}
-		function updateClickedRanking()
-		{
-			let clickedList = JSON.parse(localStorage.getItem('clickedList'));
-			clickedList.sort(function(a, b)
-				{
-				var x = JSON.parse(localStorage.getItem(a)).length;
-				var y = JSON.parse(localStorage.getItem(b)).length;
-				if(x > y) return -1;
-				if(x < y) return 1;
-				return 0;
-				
-				});
-			localStorage.setItem('clickedList', JSON.stringify(clickedList));
-		}
-		var hours;
-		
-		function processData(array)
-		{
-			
-			
-			Promise.all(array.map(function(item){
-							return Promise.all(item.practices.map(function(pract){
-								if(pract.within_search_area)
-								{
-									return getWorkingHours(pract.lat, pract.lng);
-								}
-								else return;
-							}));					
-						})).then(function(data){
-							hours = data;
-							nextProcess(array);
-						});
-		}
-		function nextProcess(array)
-			{		
-			
-			let tempArray = [];
-			let clickedList = JSON.parse(localStorage.getItem('clickedList'));
-			array.forEach(function(item){
-				let usersClicked = localStorage.getItem(item.uid);
-				if(usersClicked == null)
-				{
-					let users = [];
-					clickedList.push(item.uid);
-					localStorage.setItem(item.uid, JSON.stringify(users));
+				url : url,
+				type : 'GET',
+				success : function(data) {
+					nextProcess(data.data, fv);
+				},
+				error : function(data) {
+					alert(data.meta.message)
 				}
 			});
-			localStorage.setItem('clickedList', JSON.stringify(clickedList));
-			if(sortEl == 'clicks')
-			{
-				array.sort(function(a, b)
-						{
-							var x = clickedList.indexOf(a.uid);
-							var y = clickedList.indexOf(b.uid);
-							if(x > y) return 1;
-							if(x < y) return -1;
-							return 0;
-						});
-				
-			}
-			var service = $('#service').val();
-			//var searchTime = $('#searchTime').val();
-			var newPatients = $('#newPatients').val();
-			if(service == '' && !newPatients)
-			{
-				tempArray = array;
-			}
-			else
-			{
-			array.forEach(function(item, index){
-					var checkIfTrue = [];
-					if(newPatients)
-					{
-						let clear = false;
-						item.practices.forEach(function(item2){
-						if(item2.within_search_area && item2.accepts_new_patients)
-						{
-							clear = true;
-							return;
-						}
-						
-					});
-						checkIfTrue.push(clear);
-					}
-						/**if(searchTime)
-						{
-							let clear = false;
-							var open = $('#open').val(), close = $('#close').val(), days = ($('#day').val()).split(',');
-							var practHours = hours[index];
-							item.practices.forEach(j, function(item2){	
-								if(item2.within_search_area)
-								{	
-								if(practHours[j].period[Number(d)].open.time < open && practHours[j].period[Number(d)].close.time > close)
-								{
-									clear = true;
-									return;
-								}	
-							}
-							});
-							checkIfTrue.push(clear);
-						}*/
-					if(service != '')
-					{
-						let clear = false
-						item.specialties.forEach(function(item2){
-							if(service == item2.category)
-							{
-								clear = true;
-								return;
-							}
-						});
-						checkIfTrue.push(clear);
-					}
-					if(!checkIfTrue.includes(false))
-					{
-						tempArray.push(item);
-					}
-					else hours.remove(index);
-				});			
-			}
-			searchResults = tempArray;
-			resultcount = searchResults.length;
-			makeTable(1);
-		}
-		function getWorkingHours(latitude, longitude)
-		{
-			var geocoder = new google.maps.Geocoder;
-			var service = new google.maps.places.PlacesService(document.createElement('div'));
-			var latlng = {lat: parseFloat(latitude), lng: parseFloat(longitude)};
-			return new Promise(function(resolve, reject){
-				geocoder.geocode({'location': latlng}, function(results, status) {
-				    if (status === google.maps.GeocoderStatus.OK) {
-				      if (results[1])
-				    	  {
-				    	  console.log('here');
-				    	  	 service.getDetails('{placeId: '+results[1].place_id+'}', callback);
-				    	  	 function callback(place, status)
-				    	  	 {
-				    	  		if (status == google.maps.places.PlacesServiceStatus.OK) {
-				    	  			
-				    	  		    resolve(place.opening_hours);
-				    	  		  }
-				    	  	 }
-				    	  }
-				    	  }
-			});
-			});	
-			}
-		function makeTable(pageNum) {
-			
-			var tableText, paganText;
-			if (resultcount == 0)
-				tableText = "There are no results matching that criteria.";
-			else {
-				var perPage = $('#perPage').val();
-				var end;
-				if ((pageNum) * perPage >= resultcount)
-					end = resultcount;
-				else
-					end = (pageNum) * perPage;
-				tableText = "<table class='table table-bordered table-condensed'><thead><tr><th>Name</th></tr></thead><tbody>";
-				for (var i = (pageNum-1)*perPage; i < end; i++) {
-					var doc = searchResults[i];
-					var popoverContent = "<p><ul><li>Name: "+ doc.profile.first_name + " " + doc.profile.last_name
-					+"</li><li>Gender: "+doc.profile.gender
-					+"</li><li>Specialties: " + loopThrough(doc.specialties, 'name') 
-					+ "</li><li>Languages: " +loopThrough(doc.profile.languages, "name")
-					+"</li><li>Users Clicked: "+JSON.parse(localStorage.getItem(doc.uid)).length
-					+"</li></ul></p>";
-					tableText += "<tr><td><a href='javascript://' id='"+doc.uid+"' data-trigger='focus' rel='popover' title='"+doc.profile.first_name+"'data-content='"+popoverContent+"'>"
-							+ doc.profile.first_name + " "+doc.profile.last_name+"</a></td></tr>";
-				}
-				tableText += "</tbody></table><br>";
-				var start, stop;
-				var max = Math.ceil(resultcount / perPage);
-				if (pageNum <= 3) {
-					start = 1;
-					stop = 5;
-				} else if (pageNum >= (max - 2)) {
-					start = max - 5;
-					stop = max;
-				} else {
-					start = pageNum - 2;
-					stop = pageNum + 2;
-				}
-				paganText = "<ul class='pagination' id='pagan'>";
-				for (var i = start; i <= stop; i++) {
-					if (i == pageNum) {
-						paganText += "<li class='active'>";
-					} else
-						paganText += "<li>";
-						paganText += "<a href='#' onclick='makeTable("+i+");'>" + i + "</a></li>";
-				}
-				paganText += "</ul>";
-				$('body').on('click', '[rel="popover"]', function()
-						{
-							var idNum = $(this).attr('id');
-							var usersClicked = JSON.parse(localStorage.getItem(idNum));
-							var user = localStorage.getItem('activeUser');
-							if(!usersClicked.includes(user))
-								{
-									usersClicked.push(user);
-									localStorage.setItem(idNum, JSON.stringify(usersClicked));
-									updateClickedRanking();
-								}
-						});
-				//initializes the popovers
-				$(function() {
-					$('[rel="popover"]').popover({
-						html : true
-					});
-				});
-				document.getElementById("myPagan").innerHTML = paganText;
-			}
-			document.getElementById("myTable").innerHTML = tableText;
-			
-		}
+		});
 	</script>
 </body>
 </html>
