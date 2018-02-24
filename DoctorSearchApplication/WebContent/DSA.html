@@ -4,13 +4,10 @@
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>DSA Main Page</title>
 <link href='dist/css/bootstrap.min.css' rel='stylesheet'>
-<script
-	src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<script type="text/javascript" src="dist/js/bootstrap.js"></script>
+<script type="text/javascript" src="all.min.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnA5Xj0yd3O1xJKlwluq8BYmuQnKuVCFY&libraries=places">
 <script type="text/javascript">
 </script>
-<script src = "DSAjs.js"></script>
 </head>
 <body>
 	<div class="modal fade" id="loginModal" data-backdrop="static">
@@ -93,8 +90,8 @@
 				</div>
 				<div class='col-md-2 col-sm-4'>
 					<label for="perPage">Results per page</label> <input type="number"
-						class="form-control" id="perPage" step='10' min='10' max='100'
-						value='10'>
+						class="form-control" id="perPage" step='5' min='5' max='25'
+						value='5'>
 				</div>
 				<div class='col-md-2 col-sm-4'>
 					<label for="sort">Sort by:</label> <select id="sort">
@@ -199,7 +196,6 @@
 
 		var location;
 		var resultcount, searchResults, locationTxt = '', sortEl;
-		var apiKey = '5c53490fbdd176694ccc59ea747d1dae';
 		/**
 		$('#searchDocs').click(function(){
 			//gets the address
@@ -222,27 +218,13 @@
 			});
 			
 		});*/
+		
 		//this is needed because the geocoder is an asynchronous call
 		$('#searchDocs').click(function() {
 			var x = document.getElementById("searchForm").elements;
 			var fv = new formValues(x);
-			var url = 'https://api.betterdoctor.com/2016-03-01/doctors?';
-			var npiurl = 'https://npiregistry.cms.hhs.gov/api/?';
-			var keys = Object.keys(fv.urlEls);
-			for (var i = 0; i < keys.length; i++) {
-				url += keys[i] + '=' + fv.urlEls[keys[i]] + '&';
-			}
-			url += 'limit=100&user_key=' + apiKey;
-			$.ajax({
-				url : url,
-				type : 'GET',
-				success : function(data) {
-					nextProcess(data.data, fv);
-				},
-				error : function(data) {
-					alert(data.meta.message)
-				}
-			});
+			searchDocs.length = 0;
+			processForm(fv, 1);
 		});
 	</script>
 </body>

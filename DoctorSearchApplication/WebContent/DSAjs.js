@@ -1,16 +1,22 @@
+var searchDocs = [];
+var fv;
+var apiKey = '5c53490fbdd176694ccc59ea747d1dae';
 function formValues(elements) {
 	this.urlEls = {
-		name : elements.namedItem('name').value,
-		location : encodeURIComponent(elements.namedItem('lat').value + ','
-				+ elements.namedItem('lng').value + ','
-				+ elements.namedItem('range').value),
-		user_location : encodeURIComponent(elements.namedItem('lat').value
-				+ ',' + elements.namedItem('lng').value)
+		name : elements['name'].value,
+		location : encodeURIComponent(elements['lat'].value + ','
+				+ elements['lng'].value + ','
+				+ elements['range'].value),
+		user_location : encodeURIComponent(elements['lat'].value
+				+ ',' + elements['lng'].value),
+		gender : elements['gender'].value,
+		limit: elements['perPage'].value,
+		skip: '0'
 	};
 	this.processEls = {
-		gender : elements.namedItem('gender').value
+		
 	};
-	let s = elements.namedItem('sort').value;
+	let s = elements['sort'].value;
 	if (s != '') {
 		if (s == 'clicks')
 			this.processEls.sort = s;
@@ -45,102 +51,132 @@ function doctor(data) {
 	}
 	this.specialties = data.specialties;
 	this.practices = [];
+	//console.log(data.practices);
 	for (var i = 0; i < data.practices.length; i++) {
 		if (data.practices[i].within_search_area)
 			this.practices.push(data.practices[i]);
 	}
 	this.languages = data.profile.languages;
 }
-function processData(array) {
-	Promise.all(array.map(function(item) {
-		return Promise.all(item.practices.map(function(pract) {
-			if (pract.within_search_area) {
-				return getWorkingHours(pract.lat, pract.lng);
-			} else
-				return;
-		}));
-	})).then(function(data) {
-		hours = data;
-		nextProcess(array);
-	});
-}
-function nextProcess(array, formDetails) {
-	var doctors = [];
-	array.forEach(function(item) {
-		var doc = new doctor(item);
-		doctors.push(doc);
-	});
-	var keys = Object.keys(formDetails.processEls);
-	for (var i = 0; i < keys.length; i++) {
-		if (keys[i] == 'sort' || formDetails.processEls[keys[i]] == '')
-			continue;
-		doctors = doctors.filter(function(item) {
-			return item[keys[i]] == formDetails.processEls[keys[i]];
-		});
+function checkLength(page)
+{
+	let docLength = searchDocs.length;
+	let size = fv.urlEls.limit;
+	if(docLength >= page*size)
+	{
+		var t = searchDocs.slice((page-1)*size, page*size);
+		//console.log(t);
+		makeTable(t, page);
 	}
-	if (formDetails.processEls.sort == 'clicks') {
-		doctors.sort(function(a, b) {
-			var x = a.clicks;
-			var y = b.clicks;
-			if (x > y)
-				return -1;
-			if (y < x)
-				return 1
-			return 0;
-		});
+	else
+	{
+		let s = fv.urlEls.skip;
+		fv.urlEls.skip = s+size;
+		processForm(fv, page);
 	}
-	makeTable(doctors, 1);
 }
-function getWorkingHours(latitude, longitude) {
-	var geocoder = new google.maps.Geocoder;
-	var service = new google.maps.places.PlacesService(document
-			.createElement('div'));
-	var latlng = {
-		lat : parseFloat(latitude),
-		lng : parseFloat(longitude)
-	};
-	return new Promise(
-			function(resolve, reject) {
-				geocoder
-						.geocode(
-								{
-									'location' : latlng
-								},
-								function(results, status) {
-									if (status === google.maps.GeocoderStatus.OK) {
-										if (results[1]) {
-											console.log('here');
-											service
-													.getDetails(
-															'{placeId: '
-																	+ results[1].place_id
-																	+ '}',
-															callback);
-											function callback(place, status) {
-												if (status == google.maps.places.PlacesServiceStatus.OK) {
 
-													resolve(place.opening_hours);
-												}
-											}
-										}
-									}
-								});
+function processForm(formDetails, page) {
+	fv = formDetails;
+	var url = 'https://api.betterdoctor.com/2016-03-01/doctors?';
+	var npiurl = 'https://npiregistry.cms.hhs.gov/api/?';
+	var urlkeys = Object.keys(formDetails.urlEls);
+	for (var i = 0; i < urlkeys.length; i++) {
+		if(formDetails.urlEls[urlkeys[i]] != '')
+		{
+			url += urlkeys[i] + '=' + formDetails.urlEls[urlkeys[i]] + '&';
+		}
+	}
+	url += '&user_key=' + apiKey;
+	$.ajax({
+		url : url,
+		type : 'GET',
+		success : function(data) {
+			var doctors = [];
+			data.data.forEach(function(item) {
+				var doc = new doctor(item);
+				doctors.push(doc);
 			});
+			var keys = Object.keys(formDetails.processEls);
+			for (var i = 0; i < keys.length; i++) {
+				if (keys[i] == 'sort' || formDetails.processEls[keys[i]] == '')
+					continue;
+				doctors = doctors.filter(function(item) {
+					return item[keys[i]] == formDetails.processEls[keys[i]];
+				});
+			}
+			if (formDetails.processEls.sort == 'clicks') {
+				doctors.sort(function(a, b) {
+					var x = a.clicks;
+					var y = b.clicks;
+					if (x > y)
+						return -1;
+					if (y < x)
+						return 1
+					return 0;
+				});
+			}
+			Array.prototype.push.apply(searchDocs, doctors);
+			//console.log(searchDocs.length);
+			checkLength(page);
+			/*var geocoder = new google.maps.Geocoder();
+			var service = new google.maps.places.PlacesService(document.createElement('div'));
+			var sumIndex = 0;
+			Promise.all(doctors.map(function(doc) {
+				//console.log(doc);
+				return Promise.all(doc.practices.map(function(prac, index) {
+					//console.log(prac);
+					let latlng = {
+						lat : parseFloat(prac.lat),
+						lng : parseFloat(prac.lon)
+					};
+					let delay = 200*(index+sumIndex);
+					let l = doc.practices.length;
+					if(index == l-1) sumIndex += l;
+					console.log(delay + ', ' + sumIndex +', ' + l);
+					return new Promise(function(resolve, reject) {
+						setTimeout(function(){
+							geocoder.geocode({
+							'location' : latlng
+						}, function(results, status) {
+							if (status === google.maps.GeocoderStatus.OK) {
+								if (results[0]) {
+									service.getDetails({placeId: results[0].place_id}, function(place, status){
+										if (status === google.maps.places.PlacesServiceStatus.OK) {
+											console.log(place);
+											resolve(place.opening_hours);
+										}
+									});
+								} else {
+									reject();
+								}
+							} else {
+								window.alert('Geocoder failed due to: ' + status);
+							}
+						});
+						}, delay);
+					});
+				})).then(function(hours){
+					doc.hours = hours;
+					//console.log('here');
+				});
+			})).then(function(){
+				//console.log('here 2');
+				
+			});*/
+		},
+		error : function(data) {
+			alert(data.meta.message)
+		}
+	});
 }
 function makeTable(array, pageNum) {
-
 	var tableText, paganText;
 	if (array.length == 0)
 		tableText = "There are no results matching that criteria.";
 	else {
-		var perPage = $('#perPage').val();
-		var end;
-		if ((pageNum) * perPage >= array.length)
-			end = array.length;
-		else
-			end = (pageNum) * perPage;
 		tableText = "<table class='table table-bordered table-condensed'><thead><tr><th>Name</th></tr></thead><tbody>";
-		for (var i = (pageNum - 1) * perPage; i < end; i++) {
+		for (var i = 0; i < array.length; i++) {
 			var doc = array[i];
 			var popoverContent = "<p><ul><li>Name: " + doc.name
 					+ "</li><li>Gender: " + doc.gender
@@ -157,13 +193,9 @@ function makeTable(array, pageNum) {
 		}
 		tableText += "</tbody></table><br>";
 		var start, stop;
-		var max = Math.ceil(resultcount / perPage);
 		if (pageNum <= 3) {
 			start = 1;
 			stop = 5;
-		} else if (pageNum >= (max - 2)) {
-			start = max - 5;
-			stop = max;
 		} else {
 			start = pageNum - 2;
 			stop = pageNum + 2;
@@ -174,7 +206,7 @@ function makeTable(array, pageNum) {
 				paganText += "<li class='active'>";
 			} else
 				paganText += "<li>";
-			paganText += "<a href='#' onclick='makeTable(" + i + ");'>" + i
+			paganText += "<a href='#' onclick='checkLength(" + i + ");'>" + i
 					+ "</a></li>";
 		}
 		paganText += "</ul>";
@@ -187,7 +219,7 @@ function makeTable(array, pageNum) {
 				localStorage.setItem(idNum, JSON.stringify(usersClicked));
 			}
 		});
-		//initializes the popovers
+		// initializes the popovers
 		$(function() {
 			$('[rel="popover"]').popover({
 				html : true
