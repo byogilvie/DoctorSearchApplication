@@ -56,7 +56,35 @@ function doctor(data) {
 		if (data.practices[i].within_search_area)
 			this.practices.push(data.practices[i]);
 	}
+	
 	this.languages = data.profile.languages;
+	this.practHours = [];
+	this.practHoursText = [];
+	console.log(this.practHoursText);
+	this.makeTable = function()
+	{
+		var tText = '<ul>Practices:';
+		for(var i = 0; i<this.practices.length; i++)
+		{
+			tText += '<li>Name: ' + this.practices[i].name
+			+ '</li>';
+			console.log(this.practHoursText[i]);
+			if(this.practHoursText[i] == 'Opening hours not available')
+				tText += '<li>Open Hours: not available</li>';
+			else
+			{
+				tText += '<ul>Open Hours:';
+				for(var j = 0; j<this.practHoursText[i].length; j++)
+				{
+					tText += '<li>' + this.practHoursText[i][j] + '</li>';
+				}
+				tText += '</ul>';
+			}
+		}
+		tText += '</ul>';
+		return tText;
+	};
+	
 }
 function checkLength(page)
 {
@@ -94,32 +122,11 @@ function processForm(formDetails, page) {
 		success : function(data) {
 			var doctors = [];
 			data.data.forEach(function(item) {
+				//console.log(item.practice)
 				var doc = new doctor(item);
 				doctors.push(doc);
 			});
-			var keys = Object.keys(formDetails.processEls);
-			for (var i = 0; i < keys.length; i++) {
-				if (keys[i] == 'sort' || formDetails.processEls[keys[i]] == '')
-					continue;
-				doctors = doctors.filter(function(item) {
-					return item[keys[i]] == formDetails.processEls[keys[i]];
-				});
-			}
-			if (formDetails.processEls.sort == 'clicks') {
-				doctors.sort(function(a, b) {
-					var x = a.clicks;
-					var y = b.clicks;
-					if (x > y)
-						return -1;
-					if (y < x)
-						return 1
-					return 0;
-				});
-			}
-			Array.prototype.push.apply(searchDocs, doctors);
-			//console.log(searchDocs.length);
-			checkLength(page);
-			/*var geocoder = new google.maps.Geocoder();
+			var geocoder = new google.maps.Geocoder();
 			var service = new google.maps.places.PlacesService(document.createElement('div'));
 			var sumIndex = 0;
 			Promise.all(doctors.map(function(doc) {
@@ -143,7 +150,7 @@ function processForm(formDetails, page) {
 								if (results[0]) {
 									service.getDetails({placeId: results[0].place_id}, function(place, status){
 										if (status === google.maps.places.PlacesServiceStatus.OK) {
-											console.log(place);
+											//console.log(place.website);
 											resolve(place.opening_hours);
 										}
 									});
@@ -157,13 +164,42 @@ function processForm(formDetails, page) {
 						}, delay);
 					});
 				})).then(function(hours){
-					doc.hours = hours;
-					//console.log('here');
+					console.log(hours);
+					if(typeof hours[0] != 'undefined')
+					{
+						doc.practHours.push(hours.periods);
+						doc.practHoursText.push(hours.weekday_text);
+					}else
+						{
+						doc.practHours.push("Opening hours not available");
+						doc.practHoursText.push("Opening hours not available");
+						}
+					
 				});
 			})).then(function(){
-				//console.log('here 2');
-				
-			});*/
+				var keys = Object.keys(formDetails.processEls);
+				for (var i = 0; i < keys.length; i++) {
+					if (keys[i] == 'sort' || formDetails.processEls[keys[i]] == '')
+						continue;
+					doctors = doctors.filter(function(item) {
+						return item[keys[i]] == formDetails.processEls[keys[i]];
+					});
+				}
+				if (formDetails.processEls.sort == 'clicks') {
+					doctors.sort(function(a, b) {
+						var x = a.clicks;
+						var y = b.clicks;
+						if (x > y)
+							return -1;
+						if (y < x)
+							return 1
+						return 0;
+					});
+				}
+				Array.prototype.push.apply(searchDocs, doctors);
+				//console.log(searchDocs.length);
+				checkLength(page);
+			});
 		},
 		error : function(data) {
 			alert(data.meta.message)
@@ -180,6 +216,7 @@ function makeTable(array, pageNum) {
 			var doc = array[i];
 			var popoverContent = "<p><ul><li>Name: " + doc.name
 					+ "</li><li>Gender: " + doc.gender
+					+ "</li><li>" + doc.makeTable()
 					+ "</li><li>Specialties: "
 					+ loopThrough(doc.specialties, 'name')
 					+ "</li><li>Languages: "
