@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<script src = "all.min.js"></script>
+<link href='dist/css/bootstrap.min.css' rel='stylesheet'>
+</head>
+<body>
+<form id='testForm'>
+	<input hidden=true type='text' id='name' value = 'john'>
+	<input hidden=true type='text' id='lat' value = '33.9875512'>
+	<input hidden=true type='text' id='lng' value = '-84.468772'>
+	<input hidden=true type='text' id='range' value = '5'>
+	<input hidden=true type='text' id='perPage' value = '5'>
+	<input hidden=true type='text' id='gender' value = 'male'>
+	<input hidden=true type='text' id='sort' value = ''>
+</form>
+	<button id='testTable'>Test Table</button>
+	<button id='testApi'>Test Api call</button>
+	<div id='description'></div>
+	<div class='row' id='myTable'></div>
+		<div id='myPagan'></div>
+</body>
+<script>
+	localStorage.setItem('activeUser', 'Bradley Ogilvie');
+	var testArray = [
+	      {
+	          
+	          "uid": "5d35a516-b679-421f-84b5-04b9471376e8",
+	          "clicks": 2,
+	          "specialties": [{"name": "checker"}],
+	          "profile":       {
+	        	  "languages": [{"name": "English"}],
+	             "first_name": "Faith",
+	             "last_name": "Garner",
+	             "gender": "male"
+	          },
+	          "practices": [      {
+	             "within_search_area": false,
+	             "visit_address":          {
+	                "state": "ma",
+	                "city": "Worcester",
+	                "street": "733 Veterans",
+	                "zip": "01620"
+	             }
+	          }]
+	       },
+	          {
+	          
+	          "uid": "c18e9f7e-b01b-4e65-aa53-c0608833f515",
+	          "clicks": 4,
+	          "specialties": [{"name": "doer"}],
+	          "profile":       {
+	        	  "languages": [{"name": "French"}],
+	             "first_name": "Ethan",
+	             "last_name": "Henderson",
+	             "gender": "male"
+	          },
+	          "practices": [      {
+	             "within_search_area": false,
+	             "visit_address":          {
+	                "state": "tn",
+	                "city": "Clarksville",
+	                "street": "321 Leland",
+	                "zip": "37053"
+	             }
+	          }]
+	       },
+	          {
+	          
+	          "uid": "4c4bc1fa-c5d7-4f24-83ca-055201c282a3",
+	          "clicks": 1,
+	          "specialties": [{"name": "tester"}],
+	          "profile":       {
+	        	  "languages": [{"name": "German"}],
+	             "first_name": "Lionel",
+	             "last_name": "Ingram",
+	             "gender": "male"
+	          },
+	          "practices": [      {
+	             "within_search_area": true,
+	             "visit_address":          {
+	                "state": "co",
+	                "city": "Colorado Springs",
+	                "street": "7548 Glenroy",
+	                "zip": "80199"
+	             }
+	          }]
+	       },
+	          {
+	          
+	          "uid": "e5397f69-256b-42f0-a754-6a5027abce2c",
+	          "clicks": 4,
+	          "specialties": [{"name": "doer"}],
+	          "profile":       {
+	        	  "languages": [{"name": "English"}],
+	             "first_name": "Virginia",
+	             "last_name": "Mullen",
+	             "gender": "male"
+	          },
+	          "practices": [      {
+	             "within_search_area": true,
+	             "visit_address":          {
+	                "state": "ks",
+	                "city": "Topeka",
+	                "street": "4120 Hermitage",
+	                "zip": "66649"
+	             }
+	          }]
+	       },
+	          {
+	          
+	          "uid": "b3960c56-e542-4f28-ace3-6ab4bd1481b0",
+	          "clicks": 3,
+	          "specialties": [{"name": "tester"}],
+	          "profile":       {
+	        	  "languages": [{"name": "German"}],
+	             "first_name": "Jase",
+	             "last_name": "Underwood",
+	             "gender": "male"
+	          },
+	          "practices": [      {
+	             "within_search_area": true,
+	             "visit_address":          {
+	                "state": "fl",
+	                "city": "Tallahassee",
+	                "street": "5596 Dan Ryan Franklin",
+	                "zip": "32315"
+	             }
+	          }]
+	       },
+	          {
+	          
+	          "uid": "e4e10bf6-1f87-4b85-9690-fba15299ab65",
+	          "clicks": 1,
+	          "specialties": [{"name": "user"}],
+	          "profile":       {
+	        	  "languages": [{"name": "French"}],
+	             "first_name": "Arielle",
+	             "last_name": "Joseph",
+	             "gender": "male"
+	          },
+	          "practices": [      {
+	             "within_search_area": true,
+	             "visit_address":          {
+	                "state": "ca",
+	                "city": "Chula Vista",
+	                "street": "8821 Lsd 31st St",
+	                "zip": "91982"
+	             }
+	          }]
+	       },
+	          {
+	          
+	          "uid": "89bec715-258b-4f64-b124-8bd71fe8966d",
+	          "clicks": 5,
+	          "specialties": [{"name": "user"}],
+	          "profile":       {
+	        	  "languages": [{"name": "French"}],
+	             "first_name": "Daxton",
+	             "last_name": "Garcia",
+	             "gender": "male"
+	          },
+	          "practices": [      {
+	             "within_search_area": true,
+	             "visit_address":          {
+	                "state": "wi",
+	                "city": "Milwaukee",
+	                "street": "7009 Heath",
+	                "zip": "53620"
+	             }
+	          }]
+	       },
+	          {
+	          
+	          "uid": "69bf9f54-0c42-4042-af99-fdf9f52b8fdd",
+	          "clicks": 4,
+	          "specialties": [{"name": "checker"}],
+	          "profile":       {
+	        	  "languages": [{"name": "English"}],
+	             "first_name": "Miah",
+	             "last_name": "Durham",
+	             "gender": "female"
+	          },
+	          "practices": [      {
+	             "within_search_area": true,
+	             "visit_address":          {
+	                "state": "la",
+	                "city": "New Orleans",
+	                "street": "1431 Wacker Sb Lsd Lower",
+	                "zip": "70257"
+	             }
+	          }]
+	       },
+	          {
+	          
+	          "uid": "e8af9da1-c1fb-488d-909b-c5dc09825ced",
+	          "clicks": 6,
+	          "specialties": [{"name": "checker"}],
+	          "profile":       {
+	        	  "languages": [{"name": "German"}],
+	             "first_name": "Alec",
+	             "last_name": "Lamb",
+	             "gender": "male"
+	          },
+	          "practices": [      {
+	             "within_search_area": true,
+	             "visit_address":          {
+	                "state": "fl",
+	                "city": "Miami",
+	                "street": "8424 Gole",
+	                "zip": "33514"
+	             }
+	          }]
+	       },
+	          {
+	          "uid": "3bed4816-b8a3-4255-b49f-bf6dd85f1523",
+	          "clicks": 1,
+	          "specialties": [{"name": "doer"}],
+	          "profile":       {
+	             "first_name": "Tyson",
+	             "last_name": "Russo",
+	             "gender": "male",
+	             "languages": [{"name": "Dutch"}]
+	          },
+	          "practices": [      {
+	             "within_search_area": true,
+	             "visit_address":          {
+	                "state": "va",
+	                "city": "Chesapeake",
+	                "street": "3890 128th",
+	                "zip": "23310"
+	             }
+	          }]
+	       }
+	    ];
+	$("#testApi").click(function(){
+    	document.getElementById("description").innerHTML = "This will test the processForm method."
+    	+'  It should show the doctors John Day, John Seiler, Johnny Won, John Jones, and John Knox.';
+    	console.log('here');
+    	var x = document.getElementById("testForm").elements;
+    	var fv = new formValues(x);
+    	searchDocs.length = 0;
+        processForm(fv,1);
+    });
+	    $("#testTable").click(function(){
+	    	document.getElementById("description").innerHTML = "This will test the makeTable method."
+		    	+'  It should show the 10 doctors in the testArray array.';
+	    	var d = [];
+	    	testArray.forEach(function(item) {
+				var doc = new doctor(item);
+				d.push(doc);
+			});
+	        makeTable(d,1);
+	        return;
+	    });
+	    
+</script>
+</html>
