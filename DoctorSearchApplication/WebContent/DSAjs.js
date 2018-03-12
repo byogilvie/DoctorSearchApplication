@@ -31,7 +31,7 @@ function buildInsuranceList()
         success: function (data)
         {
             providers = data.data;
-            let text = "<option value=''></option>";
+            let text = "";
             providers.forEach(function (p) {
                 text += '<option value=' + p.uid + '>' + p.name + "</option>";
             });
@@ -59,6 +59,7 @@ function doctor(practices, profile, specialties, insurances, uid) {
     this.name = profile.first_name + " " + profile.last_name;
     this.uid = uid;
     this.gender = profile.gender;
+    this.bio = profile.bio;
     let temp = JSON.parse(localStorage.getItem(uid));
     if (temp) {
         this.clicks = temp.length;
@@ -99,14 +100,43 @@ function doctor(practices, profile, specialties, insurances, uid) {
         tText += '</ul>';
         return tText;
     };
+    this.contains = function(variables, name, subname)
+    {
+    	let thisVar = this[name];
+    	if(!Array.isArray(variables))
+    	{
+    		return variables == thisVar;
+    	}
+    	let isArr = false;
+    	if(Array.isArray(thisVar)) isArr = true;
+    	for(var i = 0; i < variables.length; i++)
+    	{
+    		let temp = variables[i];
+    		if(isArr)
+    		{
+    			for(var j = 0; j < thisVar.length; j++)
+    			{
+    				let t;
+    	    		if(subname == '') t = thisVar[j];
+    	    		else t = thisVar[j][subname];
+    				if(t.includes(temp)) return true;
+    			}
+    		}
+    		else if(thisVar.includes(temp)) return true;
+    	}
+    	return false;
+    };
 }
 
 function createForm(elements)
 {
+	console.log(elements['newPatients'].checked);
     let s = elements['sort'].value;
     let u = 'https://api.betterdoctor.com/2016-03-01/';
     var p;
-    var processEls = {};
+    var processEls = {
+    		specialties: [elements['specialties'].value]
+    };
     var urlEls =
             {
                 location: elements['lat'].value + ','
@@ -117,6 +147,10 @@ function createForm(elements)
                 limit: elements['perPage'].value,
                 skip: '0'
             };
+    if(elements['newPatients'].checked)
+	{
+		processEls.practices = [true];
+	}
     var result = $('#insurance').val();
     var insuranceText = '';
     if (result.length > 0)
@@ -141,7 +175,8 @@ function createForm(elements)
         urlEls.name = elements['practName'].value;
         processEls.name = elements['docName'].value;
         processEls.gender = elements['gender'].value;
-        processEls.insurance_uid = insuranceText.split(',');
+        processEls.insurances = insuranceText.split(',');
+        processEs.bio = elements['language'].value;
         if (s != '')
             processEls.sort = s;
     } else
@@ -151,6 +186,7 @@ function createForm(elements)
         urlEls.name = elements['docName'].value;
         urlEls.gender = elements['gender'].value;
         urlEls.insurance_uid = insuranceText;
+        urlEls.query = elements['language'].value;
         if (s != '') {
             if (s == 'clicks')
                 processEls.sort = s;
@@ -169,6 +205,7 @@ function startSearch(formDets)
 }
 function checkLength(page)
 {
+	console.log('here')
     let docLength = searchDocs.length;
     let size = fv.urlEls.limit;
     let s = fv.urlEls.skip;
@@ -230,7 +267,7 @@ function processForm(formDetails, page) {
     $.ajax({
         url: u,
         type: 'GET',
-        success: async function (data) {
+        success: function (data) {
             max = data.meta.total;
             var doctors = [];
             if (formDetails.isPract)
@@ -258,7 +295,7 @@ function processForm(formDetails, page) {
             }
             //doctors = doctors.filter(function(item) { return item.practices.length > 0; });
             
-            /**for(var i = 0; i<doctors.length; i++){
+            /*for(var i = 0; i<doctors.length; i++){
                 let doc = doctors[i];
                 for(var j = 0; j < doc.practices.length; j++) {
                     let prac = doc.practices[j];
@@ -283,10 +320,14 @@ function processForm(formDetails, page) {
             }*/
                 var keys = Object.keys(formDetails.processEls);
                 for (var i = 0; i < keys.length; i++) {
-                    if (keys[i] == 'sort' || keys[i] == 'insurance_uid' || formDetails.processEls[keys[i]] == '')
+                	let sub = '';
+                    if (keys[i] == 'sort' || formDetails.processEls[keys[i]] == '')
                         continue;
+                    if(keys[i] == 'insurances') sub = 'uid';
+                	if(keys[i] == 'specialties') sub = 'name';
+                	if(key[i] == 'practices') sub = 'accepts_new_patients';
                     doctors = doctors.filter(function (item) {
-                        return item[keys[i]].includes(formDetails.processEls[keys[i]]);
+                        return item.contains(formDetails.processEls[keys[i]], keys[i], sub);
                     });
                 }
                 /*if(formDetails.isPract && formDetails.processEls.insurance_uid[0] != '')
@@ -312,7 +353,6 @@ function processForm(formDetails, page) {
                         return 0;
                     });
                 }
-                console.log(doctors.length);
                 Array.prototype.push.apply(searchDocs, doctors);
                 checkLength(page);
         },

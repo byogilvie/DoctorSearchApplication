@@ -4,9 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>DSA Main Page</title>
 <link href='dist/css/bootstrap.min.css' rel='stylesheet'>
-<script src="DSAjs.js"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="dist/js/bootstrap.min.js"></script>
+<script src="all.min.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnA5Xj0yd3O1xJKlwluq8BYmuQnKuVCFY&libraries=places">
 <script type="text/javascript">
 </script>
@@ -35,7 +33,7 @@
 					<li>Gender: what gender would you like your doctor to be?</li>
 					<li>Per page: how many results would like to see per page?</li>
 					<li>Sort by: what order do you want to see the results?</li>
-					<li>Accenting new patients: do you want to only see currently available doctors?</li>
+					<li>Accepting new patients: do you want to only see currently available doctors?</li>
 					<li>Language: do you want to see a doctor that speaks a certain language?</li>
 					<li>Services: what kind of doctor are you looking for?</li>
 				</ul>
@@ -113,21 +111,16 @@
 					</select>
 				</div>
 				<div class='col-md-4 col-sm-4'>
-					<label><input type="checkbox" class="form-control"
-						id="newPatients" value=''>Accepting new patients</label>
+					<label><input type="checkbox" 
+						id="newPatients" value='true'>Accepting new patients</label>
 				</div>
 				<div class='col-md-2 col-sm-4'>
-					<label for='query'>Language</label> <input type="text"
-						class="form-control" id="query">
+					<label for='language'>Language</label> <input type="text"
+						class="form-control" id="language">
 				</div>
 				<div class='col-md-2 col-sm-4'>
-					<label for="service">Type of service:</label> <select id="service">
-						<option value=""></option>
-						<option value='medical'>Medical</option>
-						<option value='therapy'>Therapy</option>
-						<option value='vision'>Vision</option>
-						<option value='dental'>Dental</option>
-					</select>
+					<label for="specialties">Specialties:</label>
+					 <input type='text' class='form-control' id="specialties">		
 				</div>
 			</div>
 			<!--  
@@ -174,7 +167,6 @@
 	</div>
 	<script>
 	$(document).ready(function() {
-        console.log('here');
 		if (navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(showPosition);
 		} else {
@@ -195,12 +187,10 @@
 	});
 		function logOut() {
 			localStorage.removeItem("activeUser");
-			//console.log(localStorage.getItem('activeUser'));
 			$('#loginModal').modal('show');
 		}
 		$('#loginForm').click(
 				function() {
-					//console.log($('#fName').val() + " " + $('#lName').val());
 					localStorage.setItem('activeUser', $('#fName').val() + " "
 							+ $('#lName').val());
 					$('#loginModal').modal('hide');
